@@ -1,0 +1,44 @@
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: ieeemtts-pocketbase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/pb_data
+      - ./pb_migrations:/pb_migrations:ro
+    command: serve --http=0.0.0.0:8090 --dir=/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  web:
+    build:
+      context: .
+      args:
+        # Browser-facing PocketBase URL (inlined into the client bundle).
+        NEXT_PUBLIC_PB_URL: http://localhost:8090
+    container_name: ieeemtts-web
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      # Server-side PocketBase URL (Docker-internal network).
+      PB_URL: http://pocketbase:8090
+      # Superuser credentials — read from the host .env; used by the schema
+      # bootstrap on startup.
+      PB_ADMIN_EMAIL: ${PB_ADMIN_EMAIL:-}
+      PB_ADMIN_PASSWORD: ${PB_ADMIN_PASSWORD:-}
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.opencode
+pb_data
+pb_migrations
+.env
+.env.*
+Dockerfile
+docker-compose.yml
+*.md
