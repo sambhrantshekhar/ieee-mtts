@@ -40,28 +40,25 @@ export default function DepartmentsPage() {
     applications?.map((app) => [app.department, app]) ?? [],
   );
   const appliedCount = applications?.length ?? 0;
-  const appliedAll = appliedCount >= DEPARTMENT_LIST.length;
+  const appliedAll = appliedCount >= 2;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
       <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
         <div>
-          <p className="font-mono text-[10px] tracking-widest text-cyan-400">
-            &gt; band_selection
-          </p>
           <h1 className="mt-1 font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-            <ScrambleText text="SELECT YOUR BAND" />
+            <ScrambleText text="SELECT YOUR DEPARTMENT" />
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 font-mono text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-6 font-mono text-sm text-muted-foreground">
           <span>
-            user: <span className="text-foreground">{user?.reg_number ?? user?.email}</span>
+            User: <span className="text-foreground">{user?.reg_number ?? user?.email}</span>
           </span>
           <span>
-            tuned:{" "}
+            Applied:{" "}
             <span className="text-emerald-400">
-              {appliedCount}/{DEPARTMENT_LIST.length}
+              {appliedCount}/2
             </span>
           </span>
           {appliedCount > 0 && (
@@ -69,10 +66,10 @@ export default function DepartmentsPage() {
               href="/dashboard"
               className="group inline-flex items-center gap-1.5 text-cyan-400 uppercase transition-colors hover:text-primary"
             >
-              <Activity className="size-3.5" aria-hidden="true" />
-              {appliedAll ? "status" : "view status"}
+              <Activity className="size-4" aria-hidden="true" />
+              {appliedAll ? "Status" : "View Status"}
               <ArrowRight
-                className="size-3.5 transition-transform group-hover:translate-x-1"
+                className="size-4 transition-transform group-hover:translate-x-1"
                 aria-hidden="true"
               />
             </Link>
@@ -87,14 +84,15 @@ export default function DepartmentsPage() {
         </div>
       ) : (
         <div className="flex flex-1 flex-col justify-center px-4 pb-4 sm:px-6">
-          <div className="mx-auto grid w-full max-w-6xl auto-rows-[minmax(340px,auto)] grid-cols-1 gap-px bg-border/40 sm:grid-cols-2">
+          <div className="mx-auto grid w-full max-w-6xl auto-rows-[minmax(340px,auto)] grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
             {DEPARTMENT_LIST.map((dept) => (
               <DepartmentCard
                 key={dept.slug}
                 slug={dept.slug}
                 href={`/apply/${dept.slug}`}
-                ctaLabel="apply"
+                ctaLabel="Apply"
                 applied={byDepartment.get(dept.slug) ?? null}
+                limitReached={appliedAll}
               />
             ))}
           </div>

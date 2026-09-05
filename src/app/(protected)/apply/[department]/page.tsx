@@ -25,6 +25,7 @@ export default function ApplyPage() {
   const { user } = useAuth();
   const [existing, setExisting] = useState<Application | null>(null);
   const [checking, setChecking] = useState(true);
+  const [maxReached, setMaxReached] = useState(false);
 
   useEffect(() => {
     if (!dept || !user) return;
@@ -36,6 +37,7 @@ export default function ApplyPage() {
         setExisting(
           apps.find((app) => app.department === dept.slug) ?? null,
         );
+        setMaxReached(apps.length >= 2);
       })
       .catch((error) => {
         toast.error(getErrorMessage(error));
@@ -66,7 +68,7 @@ export default function ApplyPage() {
         <Button variant="ghost" size="sm" className="-ml-2 font-mono text-[11px] tracking-widest uppercase" asChild>
           <Link href="/departments">
             <ArrowLeft className="size-3.5" aria-hidden="true" />
-            return_to_bands
+            Return to Departments
           </Link>
         </Button>
       </motion.div>
@@ -84,8 +86,8 @@ export default function ApplyPage() {
           <Icon className="size-6" aria-hidden="true" />
         </span>
         <div>
-          <p className="font-mono text-[10px] tracking-widest text-cyan-400">
-            [ {dept.code} ] // uplink
+          <p className="font-mono text-[10px] tracking-widest text-cyan-400 uppercase">
+            Application
           </p>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
             {dept.name}
@@ -108,15 +110,34 @@ export default function ApplyPage() {
               <PartyPopper className="size-6" aria-hidden="true" />
             </div>
             <h2 className="mt-4 font-heading text-xl font-bold tracking-tight">
-              signal already locked
+              Already Applied
             </h2>
             <p className="mx-auto mt-2 max-w-sm font-mono text-xs text-muted-foreground">
-              {"// one transmission per department — your submission is queued."}
+              You have already submitted an application for this department.
             </p>
             <div className="mt-6 flex flex-col items-center gap-4">
               <StatusBadge status={existing.status} />
               <Button asChild className="font-mono text-xs tracking-widest uppercase">
-                <Link href="/departments">return_to_bands</Link>
+                <Link href="/departments">Return to Departments</Link>
+              </Button>
+            </div>
+          </CyberPanel>
+        </motion.div>
+      ) : maxReached ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="show">
+          <CyberPanel className="px-6 py-12 text-center">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <span className="font-heading text-2xl font-bold">!</span>
+            </div>
+            <h2 className="mt-4 font-heading text-xl font-bold tracking-tight">
+              Application Limit Reached
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm font-mono text-xs text-muted-foreground">
+              You can apply to a maximum of two departments.
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <Button asChild className="font-mono text-xs tracking-widest uppercase">
+                <Link href="/departments">Return to Departments</Link>
               </Button>
             </div>
           </CyberPanel>
@@ -125,8 +146,8 @@ export default function ApplyPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ delay: 0.16 }}>
           <CyberPanel className="p-6 sm:p-8">
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-mono text-[10px] tracking-widest text-muted-foreground">
-                uplink // {dept.code}
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+                Application
               </span>
               <span className="flex items-center gap-2 font-mono text-[10px] tracking-widest text-emerald-400">
                 <span className="status-dot bg-emerald-400" aria-hidden="true" />

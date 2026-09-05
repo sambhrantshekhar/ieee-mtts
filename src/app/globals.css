@@ -91,6 +91,11 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   ::selection {

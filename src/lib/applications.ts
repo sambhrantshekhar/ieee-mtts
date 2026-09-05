@@ -46,6 +46,11 @@ export async function submitApplication({
   data,
   asset,
 }: SubmitApplicationInput) {
+  const existingApps = await getApplicationsForUser(userId);
+  if (existingApps.length >= 2) {
+    throw new Error("You can apply to only two departments.");
+  }
+
   const pb = getPocketBase();
 
   const payload: Record<string, unknown> = {

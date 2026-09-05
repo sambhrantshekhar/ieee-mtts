@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/form";
 
 const loginSchema = z.object({
-  email: z.string().min(1, "Email is required.").email("Enter a valid email address."),
+  email: z.string().min(1, "Email is required.").email("Enter a valid email address.")
+    .refine((val) => val.endsWith("@vitstudent.ac.in"), "Only @vitstudent.ac.in emails are allowed."),
   password: z.string().min(1, "Password is required."),
 });
 
@@ -85,7 +86,7 @@ export default function LoginPage() {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="you@university.edu"
+                      placeholder="you@vitstudent.ac.in"
                       autoComplete="email"
                       className="bg-white/[0.03] font-mono text-sm"
                       {...field}

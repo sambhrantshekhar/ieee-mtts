@@ -2,19 +2,24 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Cpu, LogOut, UserRound } from "lucide-react";
+import Image from "next/image";
+import { LogOut, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function Navbar() {
   const { user, logOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isSignOutOpen, setIsSignOutOpen] = useState(false);
 
   async function handleLogout() {
+    setIsSignOutOpen(false);
     await logOut();
     toast.success("Session terminated. See you soon!");
     router.push("/");
@@ -27,14 +32,11 @@ export function Navbar() {
           href={user ? "/departments" : "/"}
           className="group flex items-center gap-2.5 font-heading text-lg font-bold tracking-tight"
         >
-          <span className="clip-angle flex size-8 items-center justify-center bg-gradient-to-br from-cyan-500 to-emerald-500 text-primary-foreground transition-transform group-hover:rotate-6">
-            <Cpu className="size-4" aria-hidden="true" />
+          <span className="flex size-8 items-center justify-center transition-transform group-hover:rotate-6">
+            <Image src="/ieee-mtts.png" alt="IEEE MTT-S Logo" width={32} height={32} className="object-contain" />
           </span>
           <span className="flex items-baseline gap-2">
             IEEE MTT-S
-            <span className="hidden font-mono text-[10px] tracking-widest text-cyan-400/80 sm:inline">
-              {"//MTTS"}
-            </span>
           </span>
         </Link>
 
@@ -52,7 +54,7 @@ export function Navbar() {
                   pathname === "/departments" ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                bands
+                departments
               </Link>
               <Link
                 href="/dashboard"
@@ -66,12 +68,20 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleLogout}
+                onClick={() => setIsSignOutOpen(true)}
                 className="font-mono text-xs tracking-widest uppercase"
               >
                 <LogOut className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">Sign out</span>
               </Button>
+              <ConfirmDialog
+                isOpen={isSignOutOpen}
+                onClose={() => setIsSignOutOpen(false)}
+                onConfirm={handleLogout}
+                title="Are you sure you want to sign out?"
+                description="You will need to log in again to access your account."
+                confirmText="Sign Out"
+              />
             </>
           ) : (
             <>
@@ -95,7 +105,6 @@ export function Navbar() {
               </Button>
             </>
           )}
-          <ThemeToggle />
         </nav>
       </div>
     </header>

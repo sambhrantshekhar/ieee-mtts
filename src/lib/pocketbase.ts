@@ -10,7 +10,7 @@ import PocketBase from "pocketbase";
  */
 export const PB_URL =
   typeof window === "undefined"
-    ? process.env.PB_URL ??
+    ? process.env.c ??
       process.env.NEXT_PUBLIC_PB_URL ??
       "http://127.0.0.1:8090"
     : process.env.NEXT_PUBLIC_PB_URL ?? "http://127.0.0.1:8090";

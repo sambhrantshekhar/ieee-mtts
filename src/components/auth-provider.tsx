@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   reg_number?: string;
   name?: string;
+  phone?: string;
 }
 
 export interface SignUpInput {
@@ -15,6 +16,7 @@ export interface SignUpInput {
   regNumber: string;
   password: string;
   passwordConfirm: string;
+  phone: string;
 }
 
 interface AuthContextValue {
@@ -35,6 +37,7 @@ function toAuthUser(record: Record<string, unknown>): AuthUser {
     email: record.email as string,
     reg_number: record.reg_number as string | undefined,
     name: record.name as string | undefined,
+    phone: record.phone as string | undefined,
   };
 }
 
@@ -74,12 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: input.password,
       passwordConfirm: input.passwordConfirm,
       reg_number: input.regNumber,
+      phone: input.phone,
     });
 
     // Auto-login after a successful signup so the user lands on the dashboard.
     const authData = await pb
       .collection("users")
-      .authWithPassword(created.email, input.password);
+      .authWithPassword(input.email, input.password);
 
     setUser(toAuthUser(authData.record));
   }, []);

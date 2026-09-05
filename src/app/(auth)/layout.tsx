@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Cpu } from "lucide-react";
+import Image from "next/image";
 import { WaveTrace } from "@/components/rf-wave";
 
 export default function AuthLayout({
@@ -17,19 +17,16 @@ export default function AuthLayout({
         href="/"
         className="group mb-8 flex items-center gap-2.5 font-heading text-xl font-bold tracking-tight"
       >
-        <span className="clip-angle flex size-9 items-center justify-center bg-gradient-to-br from-cyan-500 to-emerald-500 text-primary-foreground transition-transform group-hover:rotate-6">
-          <Cpu className="size-5" aria-hidden="true" />
+        <span className="flex size-9 items-center justify-center transition-transform group-hover:rotate-6">
+          <Image src="/ieee-mtts.png" alt="IEEE MTT-S Logo" width={36} height={36} className="object-contain" />
         </span>
         <span className="flex items-baseline gap-2">
           IEEE MTT-S
-          <span className="hidden font-mono text-[10px] tracking-widest text-cyan-400/80 sm:inline">
-            {"//ACCESS"}
-          </span>
         </span>
       </Link>
 
       <p className="mb-6 font-mono text-[11px] tracking-widest text-muted-foreground">
-        <span className="text-cyan-400">&gt;</span> restricted_zone — identify
+        <span className="text-cyan-400">&gt;</span> Restricted Zone — Identify
         to continue
       </p>
 

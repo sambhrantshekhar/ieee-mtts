@@ -19,12 +19,12 @@ export default function LandingPage() {
 
       <main className="flex flex-1 items-center">
         <section className="relative w-full">
-          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 lg:gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <Reveal>
                 <p className="inline-flex items-center gap-2 rounded-sm border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 font-mono text-[11px] tracking-widest text-cyan-300">
                   <span className="cursor-blink text-emerald-400">▊</span>
-                  IEEE_MTTS://microwave_lab
+                  IEEE MTT-S Microwave Lab
                 </p>
               </Reveal>
 
@@ -38,15 +38,15 @@ export default function LandingPage() {
                 </h1>
               </Reveal>
 
-              <Reveal delay={0.2} className="mt-6">
+              <Reveal delay={0.2} className="mt-4">
                 <p className="max-w-md font-mono text-sm leading-relaxed text-muted-foreground">
                   <span className="text-cyan-400">{"//"}</span> electronics ·
-                  microwaves · tech. Four bands, one chapter — tune in, find
-                  your frequency, and apply in under five minutes.
+                  microwaves · tech. Four departments, one chapter — find
+                  your fit, and apply in under five minutes.
                 </p>
               </Reveal>
 
-              <Reveal delay={0.3} className="mt-8">
+              <Reveal delay={0.3} className="mt-6">
                 <div className="flex flex-col items-start gap-3 sm:flex-row">
                   <MagneticButton
                     size="lg"
@@ -54,7 +54,7 @@ export default function LandingPage() {
                     className="sheen-btn font-mono text-xs tracking-widest uppercase shadow-[0_0_28px_-6px] shadow-cyan-500/60"
                   >
                     <Link href="/auth/signup">
-                      tune_in_now
+                      Apply Now
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </Link>
                   </MagneticButton>
@@ -64,12 +64,12 @@ export default function LandingPage() {
                     asChild
                     className="font-mono text-xs tracking-widest uppercase"
                   >
-                    <Link href="/departments">explore_channels</Link>
+                    <Link href="/departments">Explore Departments</Link>
                   </MagneticButton>
                 </div>
               </Reveal>
 
-              <Reveal delay={0.4} className="mt-12">
+              <Reveal delay={0.4} className="mt-8">
                 <dl className="flex max-w-md items-center divide-x divide-white/10 border-y border-white/10 py-4">
                   {STATS.map((stat, i) => (
                     <div key={stat.label} className={i === 0 ? "pr-6" : "px-6"}>

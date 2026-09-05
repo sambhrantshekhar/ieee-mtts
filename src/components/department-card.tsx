@@ -14,6 +14,7 @@ interface DepartmentCardProps {
   href: string;
   ctaLabel: string;
   applied?: Application | null;
+  limitReached?: boolean;
 }
 
 export function DepartmentCard({
@@ -21,6 +22,7 @@ export function DepartmentCard({
   href,
   ctaLabel,
   applied,
+  limitReached,
 }: DepartmentCardProps) {
   const dept = getDepartment(slug);
   if (!dept) return null;
@@ -30,8 +32,7 @@ export function DepartmentCard({
   const content = (
     <div
       className={cn(
-        "clip-angle group relative flex h-full w-full flex-col justify-between overflow-hidden bg-card/80 p-6 backdrop-blur-md sm:p-8",
-        applied ? "cyber-border-static" : "cyber-border",
+        "clip-angle group relative flex h-full w-full flex-col justify-between overflow-hidden border border-white/10 bg-card/80 p-6 backdrop-blur-md sm:p-8",
       )}
     >
       {/* Giant wireframe dept code watermark */}
@@ -55,9 +56,6 @@ export function DepartmentCard({
         >
           <Icon className="size-7" aria-hidden="true" />
         </span>
-        <span className="font-mono text-[10px] tracking-widest text-cyan-400/80">
-          [ {dept.code} ]
-        </span>
       </div>
 
       <div className="relative mt-auto pt-12">
@@ -71,21 +69,20 @@ export function DepartmentCard({
 
       <div className="relative mt-6 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
         {applied ? (
-          <div className="flex flex-col items-start gap-2">
-            <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-emerald-400">
-              <CheckCircle2 className="size-3.5" aria-hidden="true" />
-              SUBMITTED
-            </span>
-            <StatusBadge status={applied.status} />
-          </div>
+          <StatusBadge status={applied.status} />
+        ) : limitReached ? (
+          <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-destructive">
+            <span className="inline-block size-1.5 rounded-full bg-destructive" aria-hidden="true" />
+            LIMIT REACHED
+          </span>
         ) : (
           <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-emerald-400/90">
-            <span className="status-dot bg-emerald-400" aria-hidden="true" />
+            <span className="inline-block size-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             OPEN
           </span>
         )}
 
-        {!applied && (
+        {!applied && !limitReached && (
           <span className="inline-flex items-center gap-2 font-mono text-xs tracking-widest text-cyan-400 uppercase transition-colors group-hover:text-primary">
             {ctaLabel}
             <ArrowRight
@@ -106,13 +103,9 @@ export function DepartmentCard({
       viewport={viewportOnce}
       className="h-full"
     >
-      {applied ? (
-        content
-      ) : (
-        <Link href={href} className="block h-full">
-          {content}
-        </Link>
-      )}
+      <Link href={applied ? `/dashboard?open=${applied.id}` : href} className="block h-full">
+        {content}
+      </Link>
     </motion.div>
   );
 }

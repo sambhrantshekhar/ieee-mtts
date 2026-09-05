@@ -75,9 +75,10 @@ const DEFAULT_QUESTIONS: QuestionSeed[] = [
   {
     department: "design",
     key: "asset",
-    label: "Sample asset",
-    type: "file",
-    hint: "A poster, thumbnail, or UI mock you've made. PNG/JPG/SVG/PDF up to 5MB.",
+    label: "Sample asset link",
+    type: "url",
+    placeholder: "https://drive.google.com/...",
+    hint: "Provide an open access link (e.g. Google Drive, Figma) to a poster, thumbnail, or UI mock you've made.",
     sort_order: 2,
   },
   // Management
@@ -243,15 +244,33 @@ export async function ensureCollections(): Promise<void> {
 
 async function ensureUsersField(pb: PocketBase): Promise<void> {
   const users = await pb.collections.getOne("users");
-  if (users.fields.some((field: { name: string }) => field.name === "reg_number")) return;
+  
+  let needsUpdate = false;
+  let newFields: any[] = users.fields;
+  let newIndexes: string[] = users.indexes || [];
 
-  await pb.collections.update("users", {
-    fields: [
+  if (!users.fields.some((field: { name: string }) => field.name === "reg_number")) {
+    newFields = [
       ...users.fields,
       { name: "reg_number", type: "text", required: true, max: 16, pattern: "^[0-9]{2}[A-Z]{3}[0-9]{4}$" },
-    ],
-  });
-  console.log("[bootstrap] Added reg_number field to users.");
+    ];
+    needsUpdate = true;
+  }
+
+  const regNumberIndex = "CREATE UNIQUE INDEX idx_users_reg_number ON users (reg_number)";
+  // Only add if an index for reg_number doesn't already exist
+  if (!newIndexes.some((idx: string) => idx.includes("reg_number"))) {
+    newIndexes = [...newIndexes, regNumberIndex];
+    needsUpdate = true;
+  }
+
+  if (needsUpdate) {
+    await pb.collections.update("users", {
+      fields: newFields,
+      indexes: newIndexes,
+    });
+    console.log("[bootstrap] Updated users collection with reg_number and unique index.");
+  }
 }
 
 async function ensureApplicationsCollection(pb: PocketBase): Promise<void> {

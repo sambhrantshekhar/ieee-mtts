@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import type { ApplicationStatus } from "@/lib/departments";
 
 const STATUS_META: Record<
@@ -5,9 +6,9 @@ const STATUS_META: Record<
   { label: string; dot: string; text: string }
 > = {
   pending: {
-    label: "PENDING",
-    dot: "bg-amber-400",
-    text: "text-amber-300",
+    label: "APPLIED",
+    dot: "", // unused
+    text: "text-blue-400",
   },
   reviewed: {
     label: "REVIEWING",
@@ -33,7 +34,11 @@ export function StatusBadge({ status }: { status: ApplicationStatus }) {
     <span
       className={`inline-flex items-center gap-2 rounded-sm border border-white/10 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] tracking-widest ${meta.text}`}
     >
-      <span className={`status-dot ${meta.dot}`} aria-hidden="true" />
+      {status === 'pending' ? (
+        <Check className="size-3 text-blue-400" aria-hidden="true" />
+      ) : (
+        <span className={`status-dot ${meta.dot}`} aria-hidden="true" />
+      )}
       {meta.label}
       <span className="sr-only">{status}</span>
     </span>

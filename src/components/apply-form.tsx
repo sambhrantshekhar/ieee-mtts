@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -41,21 +42,33 @@ import {
 function questionToZod(question: Question): z.ZodType {
   if (question.type === "file") return z.undefined();
 
-  const requiredMessage = `${question.label} is required.`;
+  let requiredMessage = `${question.label} is required.`;
+  if (question.type === "select") {
+    requiredMessage = "Please select an option.";
+  }
+  if (question.key === "stack") {
+    requiredMessage = "Please select a stack.";
+  }
+
   let field: z.ZodType = question.required
-    ? z.string().min(1, requiredMessage)
+    ? z.preprocess(
+        (val) => (val === undefined ? "" : val),
+        z.string().min(1, requiredMessage)
+      )
     : z.string().optional();
 
-  if (question.type === "url") {
+  if (question.key === "github") {
     field = field.refine(
-      (value) => !value || /^https?:\/\/\S+$/.test(value as string),
-      "Enter a valid URL (https://…).",
+      (value) => !value || /^(https?:\/\/)?(www\.)?github\.com\/\S+/i.test(value as string),
+      "Please provide a valid GitHub profile link (e.g., github.com/yourname).",
+    );
+  } else if (question.type === "url") {
+    field = field.refine(
+      (value) => !value || /^(https?:\/\/|www\.)\S+$/.test(value as string),
+      "Enter a valid URL (e.g., https://... or www....).",
     );
   }
 
-  if (question.type === "select" && question.required) {
-    field = z.string().min(1, requiredMessage);
-  }
 
   const minLength = question.min_length ?? 0;
   if (
@@ -122,28 +135,84 @@ function QuestionForm({
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
 
   const textQuestions = questions.filter((question) => question.type !== "file");
   const fileQuestion = questions.find((question) => question.type === "file");
   const steps = questions;
 
   const schema = useMemo(
-    () =>
-      z.object(
-        Object.fromEntries(
-          textQuestions.map((question) => [
-            question.key,
-            questionToZod(question),
-          ]),
-        ),
-      ),
+    () => {
+      const shape: Record<string, z.ZodType> = {};
+      textQuestions.forEach((question) => {
+        shape[question.key] = questionToZod(question);
+        if (question.type === "select" && question.options?.includes("Other")) {
+          shape[`${question.key}_other`] = z.string().optional();
+        }
+      });
+      return z.object(shape).superRefine((data, ctx) => {
+        textQuestions.forEach((q) => {
+          if (q.type === "select" && q.options?.includes("Other")) {
+            if (data[q.key] === "Other" && !(data[`${q.key}_other`] as string)?.trim()) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Please specify.",
+                path: [`${q.key}_other`],
+              });
+            }
+          }
+        });
+      });
+    },
     [textQuestions],
   );
+
+  const draftKey = `draft_app_${userId}_${dept.slug}`;
+  const [loaded, setLoaded] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {},
   });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        form.reset(parsed);
+        
+        // Find the first unanswered question to jump to
+        let targetIndex = 0;
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          if (step.type === "file") continue;
+          
+          const val = parsed[step.key];
+          if (val && String(val).trim() !== "") {
+            targetIndex = i; // has answer, but keep checking next
+          } else {
+            targetIndex = i; // missing answer, stop here
+            break;
+          }
+        }
+        
+        setIndex(Math.min(targetIndex, steps.length - 1));
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+    setLoaded(true);
+  }, [draftKey, form, steps]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const subscription = form.watch((value) => {
+      localStorage.setItem(draftKey, JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [form, draftKey, loaded]);
 
   const current = steps[Math.min(index, steps.length - 1)];
   const isLast = index === steps.length - 1;
@@ -157,22 +226,34 @@ function QuestionForm({
       }
       return true;
     }
-    return form.trigger(current.key);
+    let isValid = await form.trigger(current.key);
+    if (current.type === "select" && current.options?.includes("Other")) {
+      const otherValid = await form.trigger(`${current.key}_other`);
+      isValid = isValid && otherValid;
+    }
+    return isValid;
   }
 
   async function handleNext() {
+    if (isTransitioning) return;
     if (!(await validateCurrent())) return;
+    setIsTransitioning(true);
     setDirection(1);
     setIndex((i) => Math.min(i + 1, steps.length - 1));
+    setTimeout(() => setIsTransitioning(false), 400);
   }
 
   function handleBack() {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setDirection(-1);
     setIndex((i) => Math.max(i - 1, 0));
+    setTimeout(() => setIsTransitioning(false), 400);
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (isTransitioning) return;
 
     // Advance one question at a time until the final step.
     if (!isLast) {
@@ -182,7 +263,14 @@ function QuestionForm({
 
     if (!(await validateCurrent())) return;
     const results = await Promise.all(
-      textQuestions.map((question) => form.trigger(question.key)),
+      textQuestions.map(async (question) => {
+        let valid = await form.trigger(question.key);
+        if (question.type === "select" && question.options?.includes("Other")) {
+          const otherValid = await form.trigger(`${question.key}_other`);
+          valid = valid && otherValid;
+        }
+        return valid;
+      }),
     );
     if (results.some((valid) => !valid)) return;
 
@@ -191,15 +279,30 @@ function QuestionForm({
       return;
     }
 
+    // Intercept submit and show confirmation dialog
+    setIsConfirmSubmitOpen(true);
+  }
+
+  async function processSubmit() {
+    setIsConfirmSubmitOpen(false);
     setIsSubmitting(true);
     try {
+      const submitData = { ...form.getValues() } as Record<string, unknown>;
+      textQuestions.forEach((q) => {
+        if (q.type === "select" && submitData[q.key] === "Other" && submitData[`${q.key}_other`]) {
+          submitData[q.key] = `Other: ${submitData[`${q.key}_other`]}`;
+          delete submitData[`${q.key}_other`];
+        }
+      });
+
       await submitApplication({
         userId,
         department: dept.slug,
-        data: form.getValues() as Record<string, unknown>,
+        data: submitData,
         asset: asset ?? undefined,
       });
-      toast.success(`${dept.name} application transmitted!`);
+      localStorage.removeItem(draftKey);
+      toast.success(`${dept.name} application submitted!`);
       router.push("/departments");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -210,7 +313,7 @@ function QuestionForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="grid gap-8">
+      <form onSubmit={handleSubmit} className="grid gap-8" noValidate>
         {/* Progress */}
         <div className="flex items-center gap-3">
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground">
@@ -286,23 +389,45 @@ function QuestionForm({
                       </FormLabel>
                       <FormControl>
                         {current.type === "select" ? (
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || undefined}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue
-                                placeholder={current.placeholder ?? "Select an option"}
+                          <div className="space-y-3">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value || undefined}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue
+                                  placeholder={current.placeholder ?? "Select an option"}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {current.options?.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            
+                            {field.value === "Other" && (
+                              <FormField
+                                control={form.control}
+                                name={`${current.key}_other`}
+                                render={({ field: otherField }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="Please specify..."
+                                        className="bg-white/[0.03] font-mono text-sm"
+                                        {...otherField}
+                                        value={(otherField.value as string) || ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {current.options?.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            )}
+                          </div>
                         ) : current.type === "textarea" ? (
                           <Textarea
                             rows={current.rows ?? 4}
@@ -336,7 +461,7 @@ function QuestionForm({
             type="button"
             variant="ghost"
             onClick={handleBack}
-            disabled={isFirst || isSubmitting}
+            disabled={isFirst || isSubmitting || isTransitioning}
             className="font-mono text-[11px] tracking-widest uppercase"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
@@ -346,20 +471,21 @@ function QuestionForm({
           {isLast ? (
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isTransitioning}
               className="sheen-btn font-mono text-xs tracking-widest uppercase shadow-[0_0_24px_-8px] shadow-cyan-500/60"
             >
               {isSubmitting && (
                 <Loader2 className="animate-spin" aria-hidden="true" />
               )}
               {isSubmitting
-                ? "transmitting_…"
-                : `transmit::${dept.name.toLowerCase()}`}
+                ? "Submitting..."
+                : `Submit Application`}
             </Button>
           ) : (
             <Button
               type="button"
               onClick={handleNext}
+              disabled={isTransitioning}
               className="font-mono text-xs tracking-widest uppercase"
             >
               next
@@ -368,6 +494,15 @@ function QuestionForm({
           )}
         </div>
       </form>
+      
+      <ConfirmDialog
+        isOpen={isConfirmSubmitOpen}
+        onClose={() => setIsConfirmSubmitOpen(false)}
+        onConfirm={processSubmit}
+        title="Submit Application?"
+        description="Are you sure you want to submit your application? You won't be able to change it after submission."
+        confirmText="Submit"
+      />
     </Form>
   );
 }

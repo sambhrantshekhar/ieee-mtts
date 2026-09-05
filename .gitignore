@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +44,27 @@ next-env.d.ts
 # pocketbase (docker)
 /pb_data
 /pb_migrations
+
+# IDE/Editor configuration & local tools
+.opencode/
+.vscode/
+.idea/
+
+# Build artifacts
+.dist/
+
+# Lock files (optional - use when using specific package manager)
+# bun.lock  # Keep or remove based on your preference
+# package-lock.json  # Keep or remove based on your preference
+
+# Environment files (keep .env.example only)
+.env
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# OS-specific files
+Thumbs.db

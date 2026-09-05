@@ -27,15 +27,21 @@ const signUpSchema = z
     email: z
       .string()
       .min(1, "Email is required.")
-      .email("Enter a valid email address."),
+      .email("Enter a valid email address.")
+      .refine((val) => val.endsWith("@vitstudent.ac.in"), "Only @vitstudent.ac.in emails are allowed."),
     regNumber: z
       .string()
       .trim()
+      .toUpperCase()
       .min(1, "Registration number is required.")
       .regex(
         /^[0-9]{2}[A-Z]{3}[0-9]{4}$/,
         "Use your university format, e.g. 24BLC1308.",
       ),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^\d{10}$/, "Please enter a valid 10-digit phone number."),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters."),
@@ -62,6 +68,7 @@ export default function SignUpPage() {
     defaultValues: {
       email: "",
       regNumber: "",
+      phone: "",
       password: "",
       passwordConfirm: "",
     },
@@ -115,7 +122,7 @@ export default function SignUpPage() {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="you@university.edu"
+                      placeholder="you@vitstudent.ac.in"
                       autoComplete="email"
                       className="bg-white/[0.03] font-mono text-sm"
                       {...field}
@@ -132,7 +139,7 @@ export default function SignUpPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-mono text-[11px] tracking-widest uppercase">
-                    registration_number
+                    Registration Number
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -143,9 +150,27 @@ export default function SignUpPage() {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="font-mono text-[11px]">
-                    format: {`{year}{batch}{id}`} — e.g. 24BLC1308
-                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-mono text-[11px] tracking-widest uppercase">
+                    Phone Number
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="9876543210"
+                      className="bg-white/[0.03] font-mono text-sm"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -206,7 +231,7 @@ export default function SignUpPage() {
               {form.formState.isSubmitting && (
                 <Loader2 className="animate-spin" aria-hidden="true" />
               )}
-              issue_access_token
+              Create Account
             </Button>
           </form>
         </Form>

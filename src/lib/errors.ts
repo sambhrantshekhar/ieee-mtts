@@ -12,10 +12,29 @@ export function getErrorMessage(error: unknown): string {
     }
 
     // Field-level validation errors (duplicate email, invalid reg number, …).
-    if (error.status === 400 && error.data?.data) {
-      const fields = error.data.data as Record<string, { message?: string }>;
-      const first = Object.values(fields).find((field) => field?.message);
-      if (first?.message) return first.message;
+    if (error.status === 400) {
+      const fieldObj = (error.data?.data || error.data?.details) as
+        | Record<string, { message?: string } | string>
+        | undefined;
+      if (fieldObj && typeof fieldObj === "object") {
+        for (const [key, val] of Object.entries(fieldObj)) {
+          const msg = typeof val === "string" ? val : val?.message;
+          if (msg) {
+            if (msg.toLowerCase().includes("unique")) {
+              if (key === "email") return "An account with this email already exists.";
+              if (key === "reg_number") return "This registration number is already registered.";
+              if (key === "user_department") return "You have already applied to this department.";
+            }
+            if (
+              msg.toLowerCase().includes("blank") ||
+              msg.toLowerCase().includes("required")
+            ) {
+              return `${key}: ${msg}`;
+            }
+            return msg;
+          }
+        }
+      }
     }
 
     // PocketBase reports a missing collection as "Missing collection context."
@@ -26,7 +45,16 @@ export function getErrorMessage(error: unknown): string {
       return "The PocketBase collections aren't set up yet. Set PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD in .env and restart the server to auto-create them (see README).";
     }
 
-    if (error.data?.message) return error.data.message;
+    if (error.data?.message) {
+      if (error.data.message.toLowerCase().includes("unique")) {
+        return "You have already applied to this department, or this value is already in use.";
+      }
+      return error.data.message;
+    }
+    
+    if (error.message.toLowerCase().includes("unique")) {
+      return "You have already applied to this department, or this value is already in use.";
+    }
     return error.message;
   }
 
