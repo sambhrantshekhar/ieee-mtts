@@ -77,8 +77,8 @@ export default function SignUpPage() {
   async function onSubmit(values: SignUpValues) {
     try {
       await signUp(values);
-      toast.success("Access token issued. Welcome aboard!");
-      router.push("/departments");
+      toast.success("Account created! Please check your email to verify your account.");
+      router.push("/auth/login");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }

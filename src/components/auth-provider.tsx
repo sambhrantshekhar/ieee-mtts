@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = React.useCallback(async (input: SignUpInput) => {
     const pb = getPocketBase();
 
-    const created = await pb.collection("users").create({
+    await pb.collection("users").create({
       email: input.email,
       password: input.password,
       passwordConfirm: input.passwordConfirm,
@@ -80,12 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone: input.phone,
     });
 
-    // Auto-login after a successful signup so the user lands on the dashboard.
-    const authData = await pb
-      .collection("users")
-      .authWithPassword(input.email, input.password);
-
-    setUser(toAuthUser(authData.record));
+    // Send a verification email to the user
+    await pb.collection("users").requestVerification(input.email);
   }, []);
 
   const logIn = React.useCallback(async (email: string, password: string) => {
@@ -93,6 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const authData = await pb
       .collection("users")
       .authWithPassword(email, password);
+      
+    if (!authData.record.verified) {
+      pb.authStore.clear();
+      throw new Error("Please verify your email address to log in.");
+    }
+    
     setUser(toAuthUser(authData.record));
   }, []);
 
