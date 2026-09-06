@@ -23,8 +23,7 @@ export default function LandingPage() {
             <div>
               <Reveal>
                 <p className="inline-flex items-center gap-2 rounded-sm border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 font-mono text-[11px] tracking-widest text-cyan-300">
-                  <span className="cursor-blink text-emerald-400">▊</span>
-                  IEEE MTT-S Microwave Lab
+                  IEEE MTT-S
                 </p>
               </Reveal>
 
@@ -40,9 +39,9 @@ export default function LandingPage() {
 
               <Reveal delay={0.2} className="mt-4">
                 <p className="max-w-md font-mono text-sm leading-relaxed text-muted-foreground">
-                  <span className="text-cyan-400">{"//"}</span> electronics ·
-                  microwaves · tech. Four departments, one chapter — find
-                  your fit, and apply in under five minutes.
+                  Electronics,
+                  microwaves, and technology. Four departments, one chapter — find
+                  your fit and apply in under five minutes.
                 </p>
               </Reveal>
 

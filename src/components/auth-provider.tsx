@@ -12,6 +12,7 @@ export interface AuthUser {
 }
 
 export interface SignUpInput {
+  name: string;
   email: string;
   regNumber: string;
   password: string;
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const pb = getPocketBase();
 
     await pb.collection("users").create({
+      name: input.name,
       email: input.email,
       password: input.password,
       passwordConfirm: input.passwordConfirm,

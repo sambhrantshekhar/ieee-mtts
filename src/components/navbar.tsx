@@ -45,7 +45,7 @@ export function Navbar() {
             <>
               <span className="hidden items-center gap-2 font-mono text-[11px] text-muted-foreground md:flex">
                 <UserRound className="size-3.5 text-cyan-400" aria-hidden="true" />
-                {user.reg_number ?? user.email}
+                {user.name ?? user.reg_number ?? user.email}
               </span>
               <Link
                 href="/departments"

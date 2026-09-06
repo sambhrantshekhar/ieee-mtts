@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   title: "IEEE MTT-S Student Chapter — Join the Club",
   description:
     "Apply to join the IEEE MTT-S university student chapter. Pick from Technical, Design, Management, or Social.",
+  icons: {
+    icon: "/ieee-mtts.png",
+  },
 };
 
 const themeScript = `

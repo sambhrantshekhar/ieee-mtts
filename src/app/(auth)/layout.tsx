@@ -25,10 +25,7 @@ export default function AuthLayout({
         </span>
       </Link>
 
-      <p className="mb-6 font-mono text-[11px] tracking-widest text-muted-foreground">
-        <span className="text-cyan-400">&gt;</span> Restricted Zone — Identify
-        to continue
-      </p>
+
 
       <div className="w-full max-w-md">{children}</div>
     </main>

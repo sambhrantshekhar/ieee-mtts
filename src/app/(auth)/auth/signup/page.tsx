@@ -24,6 +24,7 @@ import {
 
 const signUpSchema = z
   .object({
+    name: z.string().min(1, "Name is required."),
     email: z
       .string()
       .min(1, "Email is required.")
@@ -66,6 +67,7 @@ export default function SignUpPage() {
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
+      name: "",
       email: "",
       regNumber: "",
       phone: "",
@@ -74,10 +76,13 @@ export default function SignUpPage() {
     },
   });
 
+  const emailValue = form.watch("email");
+  const emailPrefix = emailValue ? emailValue.split("@")[0] : "";
+
   async function onSubmit(values: SignUpValues) {
     try {
       await signUp(values);
-      toast.success("Account created! Please check your email to verify your account.");
+      toast.success("Account created! Please check your email (and Spam folder) to verify your account.", { duration: 6000 });
       router.push("/auth/login");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -92,17 +97,11 @@ export default function SignUpPage() {
           <span className="size-2.5 rounded-full bg-amber-400/80" />
           <span className="size-2.5 rounded-full bg-emerald-400/80" />
         </div>
-        <span className="font-mono text-[10px] tracking-widest text-muted-foreground">
-          auth://register
-        </span>
       </div>
 
       <h1 className="font-heading text-2xl font-bold tracking-tight">
         Create your account
       </h1>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">
-        {"// one token to apply to any department"}
-      </p>
 
       <div className="mt-6">
         <Form {...form}>
@@ -113,6 +112,28 @@ export default function SignUpPage() {
           >
             <FormField
               control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-mono text-[11px] tracking-widest uppercase">
+                    Full Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Your Name"
+                      autoComplete="name"
+                      className="bg-white/[0.03] font-mono text-sm"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
@@ -120,13 +141,21 @@ export default function SignUpPage() {
                     email
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="you@vitstudent.ac.in"
-                      autoComplete="email"
-                      className="bg-white/[0.03] font-mono text-sm"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        placeholder="you@vitstudent.ac.in"
+                        autoComplete="email"
+                        list="email-domains-signup"
+                        className="bg-white/[0.03] font-mono text-sm"
+                        {...field}
+                      />
+                      {emailValue?.includes("@") && !emailValue.endsWith("@vitstudent.ac.in") && (
+                        <datalist id="email-domains-signup">
+                          <option value={`${emailPrefix}@vitstudent.ac.in`} />
+                        </datalist>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,7 +173,7 @@ export default function SignUpPage() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="24BLC1308"
+                      placeholder="24BCE9999"
                       autoComplete="username"
                       className="bg-white/[0.03] font-mono text-sm uppercase"
                       {...field}
@@ -237,7 +266,7 @@ export default function SignUpPage() {
         </Form>
 
         <p className="mt-6 text-center font-mono text-[11px] text-muted-foreground">
-          already identified?{" "}
+          Already have an account?{" "}
           <Link
             href="/auth/login"
             className="font-medium tracking-widest text-cyan-400 uppercase hover:underline"

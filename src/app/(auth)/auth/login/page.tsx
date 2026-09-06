@@ -38,6 +38,9 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
+  const emailValue = form.watch("email");
+  const emailPrefix = emailValue ? emailValue.split("@")[0] : "";
+
   async function onSubmit(values: LoginValues) {
     try {
       await logIn(values.email, values.password);
@@ -56,17 +59,11 @@ export default function LoginPage() {
           <span className="size-2.5 rounded-full bg-amber-400/80" />
           <span className="size-2.5 rounded-full bg-emerald-400/80" />
         </div>
-        <span className="font-mono text-[10px] tracking-widest text-muted-foreground">
-          auth://login
-        </span>
       </div>
 
       <h1 className="font-heading text-2xl font-bold tracking-tight">
         Log in
       </h1>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">
-        {"// authenticate with your credentials"}
-      </p>
 
       <div className="mt-6">
         <Form {...form}>
@@ -84,13 +81,21 @@ export default function LoginPage() {
                     email
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="you@vitstudent.ac.in"
-                      autoComplete="email"
-                      className="bg-white/[0.03] font-mono text-sm"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        placeholder="you@vitstudent.ac.in"
+                        autoComplete="email"
+                        list="email-domains"
+                        className="bg-white/[0.03] font-mono text-sm"
+                        {...field}
+                      />
+                      {emailValue?.includes("@") && !emailValue.endsWith("@vitstudent.ac.in") && (
+                        <datalist id="email-domains">
+                          <option value={`${emailPrefix}@vitstudent.ac.in`} />
+                        </datalist>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,7 +139,7 @@ export default function LoginPage() {
         </Form>
 
         <p className="mt-6 text-center font-mono text-[11px] text-muted-foreground">
-          no access token yet?{" "}
+          Don't have an account yet?{" "}
           <Link
             href="/auth/signup"
             className="font-medium tracking-widest text-cyan-400 uppercase hover:underline"

@@ -42,7 +42,7 @@ import {
 function questionToZod(question: Question): z.ZodType {
   if (question.type === "file") return z.undefined();
 
-  let requiredMessage = `${question.label} is required.`;
+  let requiredMessage = "This field is required.";
   if (question.type === "select") {
     requiredMessage = "Please select an option.";
   }
@@ -147,14 +147,18 @@ function QuestionForm({
       const shape: Record<string, z.ZodType> = {};
       textQuestions.forEach((question) => {
         shape[question.key] = questionToZod(question);
-        if (question.type === "select" && question.options?.includes("Other")) {
+        const hasDetailOption = question.options?.some(opt => opt === "Other" || opt.toLowerCase().includes("please specify"));
+        if (question.type === "select" && hasDetailOption) {
           shape[`${question.key}_other`] = z.string().optional();
         }
       });
       return z.object(shape).superRefine((data, ctx) => {
         textQuestions.forEach((q) => {
-          if (q.type === "select" && q.options?.includes("Other")) {
-            if (data[q.key] === "Other" && !(data[`${q.key}_other`] as string)?.trim()) {
+          const hasDetailOption = q.options?.some(opt => opt === "Other" || opt.toLowerCase().includes("please specify"));
+          if (q.type === "select" && hasDetailOption) {
+            const val = data[q.key] as string;
+            const requiresDetail = val === "Other" || (val && val.toLowerCase().includes("please specify"));
+            if (requiresDetail && !(data[`${q.key}_other`] as string)?.trim()) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: "Please specify.",
@@ -221,7 +225,7 @@ function QuestionForm({
   async function validateCurrent(): Promise<boolean> {
     if (current.type === "file") {
       if (current.required && !asset) {
-        toast.error(`${current.label} is required.`);
+        toast.error("Please upload the required file.");
         return false;
       }
       return true;
@@ -265,9 +269,14 @@ function QuestionForm({
     const results = await Promise.all(
       textQuestions.map(async (question) => {
         let valid = await form.trigger(question.key);
-        if (question.type === "select" && question.options?.includes("Other")) {
-          const otherValid = await form.trigger(`${question.key}_other`);
-          valid = valid && otherValid;
+        const hasDetailOption = question.options?.some(opt => opt === "Other" || opt.toLowerCase().includes("please specify"));
+        if (question.type === "select" && hasDetailOption) {
+          const val = form.getValues()[question.key] as string;
+          const requiresDetail = val === "Other" || (val && val.toLowerCase().includes("please specify"));
+          if (requiresDetail) {
+            const otherValid = await form.trigger(`${question.key}_other`);
+            valid = valid && otherValid;
+          }
         }
         return valid;
       }),
@@ -275,7 +284,7 @@ function QuestionForm({
     if (results.some((valid) => !valid)) return;
 
     if (fileQuestion?.required && !asset) {
-      toast.error(`${fileQuestion.label} is required.`);
+      toast.error("Please upload the required file.");
       return;
     }
 
@@ -289,8 +298,11 @@ function QuestionForm({
     try {
       const submitData = { ...form.getValues() } as Record<string, unknown>;
       textQuestions.forEach((q) => {
-        if (q.type === "select" && submitData[q.key] === "Other" && submitData[`${q.key}_other`]) {
-          submitData[q.key] = `Other: ${submitData[`${q.key}_other`]}`;
+        const val = submitData[q.key] as string;
+        const requiresDetail = val === "Other" || (val && val.toLowerCase().includes("please specify"));
+        if (q.type === "select" && requiresDetail && submitData[`${q.key}_other`]) {
+          const prefix = val === "Other" ? "Other" : val;
+          submitData[q.key] = `${prefix}: ${submitData[`${q.key}_other`]}`;
           delete submitData[`${q.key}_other`];
         }
       });
@@ -408,7 +420,7 @@ function QuestionForm({
                               </SelectContent>
                             </Select>
                             
-                            {field.value === "Other" && (
+                            { (field.value === "Other" || (field.value && (field.value as string).toLowerCase().includes("please specify"))) && (
                               <FormField
                                 control={form.control}
                                 name={`${current.key}_other`}
@@ -417,7 +429,7 @@ function QuestionForm({
                                     <FormControl>
                                       <Input
                                         placeholder="Please specify..."
-                                        className="bg-white/[0.03] font-mono text-sm"
+                                        className="bg-white/[0.03] font-mono text-sm mt-3"
                                         {...otherField}
                                         value={(otherField.value as string) || ""}
                                       />
