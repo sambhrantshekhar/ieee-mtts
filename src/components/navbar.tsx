@@ -41,6 +41,14 @@ export function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-3 sm:gap-5">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden font-mono text-xs tracking-widest uppercase text-muted-foreground transition-colors hover:text-primary sm:inline-flex"
+          >
+            <Link href="/#contact">Contact</Link>
+          </Button>
           {user ? (
             <>
               <span className="hidden items-center gap-2 font-mono text-[11px] text-muted-foreground md:flex">

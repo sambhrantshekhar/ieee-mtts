@@ -17,8 +17,8 @@ export default function LandingPage() {
     <>
       <Navbar />
 
-      <main className="flex flex-1 items-center">
-        <section className="relative w-full">
+      <main className="flex flex-1 flex-col">
+        <section className="relative flex min-h-screen w-full items-center">
           <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 lg:gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <Reveal>
@@ -90,6 +90,34 @@ export default function LandingPage() {
                 aria-hidden="true"
               />
               <SpectrumWindow />
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="w-full border-t border-white/10 bg-black/20">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6">
+            <Reveal>
+              <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                Got questions or issues?
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="max-w-xl font-mono text-sm leading-relaxed text-muted-foreground">
+                Whether you want to learn more about the chapter, our projects, or need help with your application, our team is here for you. Reach out to us directly!
+              </p>
+            </Reveal>
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <a 
+                href="mailto:contact@ieeemttsvitc.tech" 
+                className="group relative inline-flex items-center gap-3 rounded-full border border-cyan-400/30 bg-cyan-400/5 px-6 py-3 font-mono text-sm text-cyan-300 transition-colors hover:bg-cyan-400/10 hover:text-cyan-200"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
+                </span>
+                Mail: contact@ieeemttsvitc.tech
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              </a>
             </div>
           </div>
         </section>
